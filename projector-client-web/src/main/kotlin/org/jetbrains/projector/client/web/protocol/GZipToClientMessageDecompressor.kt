@@ -25,11 +25,16 @@ package org.jetbrains.projector.client.web.protocol
 
 import org.jetbrains.projector.common.protocol.compress.MessageDecompressor
 import org.jetbrains.projector.common.protocol.handshake.CompressionType
+import org.khronos.webgl.Int8Array
+import org.khronos.webgl.Uint8Array
 
 object GZipToClientMessageDecompressor : MessageDecompressor<ByteArray> {
 
   override fun decompress(data: ByteArray): ByteArray {
-    return pako.inflate(data) as ByteArray
+    // ByteArray is signed, so we need to convert it to Uint8Array for decompression
+    val result = pako.inflate(Uint8Array(data.toTypedArray())) as Uint8Array
+    // Using Int8Array convert it back to ByteArray to avoid garbled data
+    return Int8Array(result.buffer).unsafeCast<ByteArray>()
   }
 
   override val compressionType = CompressionType.GZIP
