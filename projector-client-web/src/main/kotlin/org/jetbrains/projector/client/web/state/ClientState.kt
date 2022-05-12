@@ -570,6 +570,8 @@ sealed class ClientState {
       windowSizeController.removeListener()
       typing.dispose()
       connectionWatcher.removeWatcher()
+      webSocket.onclose = null
+      webSocket.close()
 
       layers.reconnectionMessageUpdater(messageText)
 
