@@ -25,6 +25,7 @@ package org.jetbrains.projector.client.web.input.key
 
 import kotlinx.browser.document
 import kotlinx.browser.window
+import org.jetbrains.projector.client.common.canvas.Extensions
 import org.jetbrains.projector.client.common.canvas.Extensions.argbIntToRgbaString
 import org.jetbrains.projector.client.common.canvas.Extensions.toFontFaceName
 import org.jetbrains.projector.client.common.misc.TimeStamp
@@ -181,8 +182,8 @@ class ImeInputMethod(
         val x = caretInfo.locationInWindow.x + windowPosition.bounds.x
         val y = caretInfo.locationInWindow.y + windowPosition.bounds.y
 
-        val fontFace = caretInfoChange.fontId?.toFontFaceName() ?: "Arial"
-        val fontSize = "${caretInfoChange.fontSize}px"
+        val fontFace =  Extensions.serverFontNameCache[caretInfoChange.fontId?.unsafeCast<Int>() ?: 0]
+        val fontSize = Extensions.serverFontNameCache[caretInfoChange.fontSize]
         val maxInputWidth = caretInfoChange.editorMetrics.width - (x - caretInfoChange.editorMetrics.x)
         val maxInputHeight = caretInfoChange.editorMetrics.height - (y - caretInfoChange.editorMetrics.y)
 
