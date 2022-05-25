@@ -26,7 +26,7 @@ package org.jetbrains.projector.client.web.input.key
 import kotlinx.browser.document
 import kotlinx.browser.window
 import org.jetbrains.projector.client.common.canvas.Extensions
-import org.jetbrains.projector.client.common.canvas.Extensions.argbIntToRgbaString
+import org.jetbrains.projector.client.common.canvas.JsExtensions.argbIntToRgbaString
 import org.jetbrains.projector.client.common.canvas.Extensions.toFontFaceName
 import org.jetbrains.projector.client.common.misc.TimeStamp
 import org.jetbrains.projector.client.web.externalDeclarartion.textDecorationThickness

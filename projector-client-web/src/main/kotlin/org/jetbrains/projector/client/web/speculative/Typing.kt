@@ -25,7 +25,7 @@ package org.jetbrains.projector.client.web.speculative
 
 import kotlinx.browser.document
 import org.jetbrains.projector.client.common.canvas.Extensions
-import org.jetbrains.projector.client.common.canvas.Extensions.argbIntToRgbaString
+import org.jetbrains.projector.client.common.canvas.JsExtensions.argbIntToRgbaString
 import org.jetbrains.projector.client.common.canvas.Extensions.toFontFaceName
 import org.jetbrains.projector.client.common.misc.ParamsProvider.SCALING_RATIO
 import org.jetbrains.projector.common.protocol.toClient.ServerCaretInfoChangedEvent
