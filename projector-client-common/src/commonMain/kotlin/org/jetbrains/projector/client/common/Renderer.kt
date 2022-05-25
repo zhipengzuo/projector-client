@@ -35,6 +35,7 @@ import org.jetbrains.projector.client.common.canvas.Extensions.toFillRule
 import org.jetbrains.projector.client.common.canvas.Extensions.toFontFaceName
 import org.jetbrains.projector.client.common.canvas.PaintColor
 import org.jetbrains.projector.client.common.canvas.PaintColor.SolidColor
+import org.jetbrains.projector.client.common.canvas.asUnsafe
 import org.jetbrains.projector.client.common.canvas.buffering.RenderingSurface
 import org.jetbrains.projector.client.common.misc.ParamsProvider
 import org.jetbrains.projector.client.common.misc.ParamsProvider.REPAINT_AREA
@@ -49,7 +50,7 @@ import kotlin.random.Random
 class Renderer(private val renderingSurface: RenderingSurface) {
   private val ctx: Context2d
     get() = renderingSurface.canvas.context2d
-
+  private val textScaleCache = HashMap<Int, Double>()
   private val canvasState = CanvasRenderingState()
   val requestedState = RequestedRenderingState()
 
@@ -124,8 +125,6 @@ class Renderer(private val renderingSurface: RenderingSurface) {
   }
 
   private fun applyClip(newIdentitySpaceClip: CommonShape?) {
-    ctx.restore()
-    ctx.save()
 
     renderingSurface.scalingRatio.let {
       ctx.setTransform(it, 0.0, 0.0, it, 0.0, 0.0)
@@ -157,27 +156,23 @@ class Renderer(private val renderingSurface: RenderingSurface) {
         is CommonPath -> ctx.clip(winding.toFillRule())
       }
     }
-
+    canvasState.transform = IDENTITY_LIST
     canvasState.identitySpaceClip = newIdentitySpaceClip
 
-    with(canvasState) {
-      applyTransform(transform)
-      applyStrokeStyle(strokeStyle)
-      applyFillStyle(fillStyle)
-      applyStroke(strokeData)
-      applyFont(font)
-      applyRule(rule)
-      applyAlpha(alpha)
+  }
+  private fun doClip() {
+    canvasState.identitySpaceClip?.apply {
+      when (this.tpe.ordinal) {
+        CommonShapeType.CommonRectangle.ordinal -> ctx.clip()
+        CommonShapeType.CommonPath.ordinal -> ctx.clip(this.asUnsafe<CommonPath>().winding.toFillRule())
+      }
     }
   }
-
-  private fun ensureClip() {
-    requestedState.identitySpaceClip.let { requestedClip ->
-      canvasState.identitySpaceClip.let { currentClip ->
-        if (currentClip != requestedClip) {
-          applyClip(requestedClip)
-        }
-      }
+  private fun drawClipRegion() {
+    if(requestedState.identitySpaceClip == null){
+      applyClip(canvasState.identitySpaceClip)
+    }else{
+      applyClip(requestedState.identitySpaceClip)
     }
   }
 
@@ -287,7 +282,7 @@ class Renderer(private val renderingSurface: RenderingSurface) {
   }
 
   fun drawString(string: String, x: Double, y: Double, desiredWidth: Double) {
-    ensureClip()
+    drawClipRegion()
     ensureTransform()
     ensureFillStyle()
     ensureFont()
@@ -297,14 +292,32 @@ class Renderer(private val renderingSurface: RenderingSurface) {
     }
 
     ctx.apply {
-      val textDimensions = measureText(string)
 
       save()
+      doClip()
 
-      val width = textDimensions.x
-      translate(x, y)
-      scale(desiredWidth / width, 1.0)
-      fillText(string, 0.0, 0.0)
+      val textRescale = if (!textScaleCache.containsKey(canvasState.fontSize)) {
+        val dimension = ctx.measureText(string)
+        val scale = desiredWidth / dimension.x
+        textScaleCache.put(canvasState.fontSize, scale)
+        scale
+      }
+      else {
+        textScaleCache.get(canvasState.fontSize) ?: 1.0
+      }
+
+
+      //
+      //
+
+
+      if (textRescale < 1 - 1e-4 || textRescale > 1 + 1e-4) {
+        translate(x, y)
+        scale(textRescale, 1.0)
+        fillText(string, 0.0, 0.0)
+      } else {
+        fillText(string, x, y)
+      }
 
       restore()
 
@@ -314,39 +327,40 @@ class Renderer(private val renderingSurface: RenderingSurface) {
         lineTo(x + desiredWidth, y)
         stroke()
 
-        val height = textDimensions.y
-        beginPath()
-        moveTo(x, y - height)
-        lineTo(x + width, y - height)
-        stroke()
       }
+      restore()
     }
   }
 
   fun drawLine(x1: Double, y1: Double, x2: Double, y2: Double) {
-    ensureClip()
+    drawClipRegion()
     ensureTransform()
     ensureStrokeStyle()
     ensureStroke()
     ensureComposite()
 
-    ctx.apply {
+    with(ctx) {
+      save()
+      doClip()
       beginPath()
       moveTo(x1, y1)
       lineTo(x2, y2)
       stroke()
+      restore()
     }
   }
 
   fun paintRoundRect(paintType: PaintType, x: Double, y: Double, w: Double, h: Double, r1: Double, r2: Double) {
-    ensureClip()
+    drawClipRegion()
     ensureTransform()
     ensurePaint(paintType)
     ensureComposite()
 
     @Suppress("NAME_SHADOWING") val r1 = minOf(r1, w / 2)
     @Suppress("NAME_SHADOWING") val r2 = minOf(r2, h / 2)
-    ctx.apply {
+    with(ctx) {
+      save()
+      doClip()
       beginPath()
       roundedRect(x, y, w, h, r1, r2)
 
@@ -355,16 +369,19 @@ class Renderer(private val renderingSurface: RenderingSurface) {
 
         PaintType.DRAW -> stroke()
       }
+      restore()
     }
   }
 
   fun paintPath(paintType: PaintType, path: CommonPath) {
-    ensureClip()
+    drawClipRegion()
     ensureTransform()
     ensurePaint(paintType)
     ensureComposite()
 
-    ctx.apply {
+    with(ctx) {
+      save()
+      doClip()
       beginPath()
       moveBySegments(path.segments)
 
@@ -373,29 +390,41 @@ class Renderer(private val renderingSurface: RenderingSurface) {
 
         PaintType.DRAW -> stroke()
       }
+      restore()
     }
   }
 
   fun paintRect(paintType: PaintType, x: Double, y: Double, width: Double, height: Double) {
-    ensureClip()
+    drawClipRegion()
     ensureTransform()
     ensurePaint(paintType)
     ensureComposite()
 
-    Do exhaustive when (paintType) {
-      PaintType.FILL -> ctx.fillRect(x, y, width, height)
+    with(ctx) {
+      save()
+      doClip()
+      //TODO: hacks, kotlin's `when` pattern matching with type casting is expensive.
+      /*
+        using a type enum signature to avoid type checking in JS runtime which is expensive.
+       */
+      when (paintType.ordinal) {
+        PaintType.FILL.ordinal -> fillRect(x, y, width, height)
 
-      PaintType.DRAW -> ctx.strokeRect(x, y, width, height)
+        PaintType.DRAW.ordinal -> strokeRect(x, y, width, height)
+      }
+      restore()
     }
   }
 
   fun paintPolygon(paintType: PaintType, points: List<Point>) {
-    ensureClip()
+    drawClipRegion()
     ensureTransform()
     ensurePaint(paintType)
     ensureComposite()
 
     ctx.apply {
+      save()
+      doClip()
       beginPath()
       moveByPoints(points)
 
@@ -404,11 +433,12 @@ class Renderer(private val renderingSurface: RenderingSurface) {
 
         PaintType.DRAW -> stroke()
       }
+      restore()
     }
   }
 
   fun drawPolyline(points: List<Point>) {
-    ensureClip()
+    drawClipRegion()
     ensureTransform()
     ensureStrokeStyle()
     ensureStroke()
@@ -444,46 +474,53 @@ class Renderer(private val renderingSurface: RenderingSurface) {
   fun drawImage(image: ImageSource, x: Double, y: Double) {
     if (image.isEmpty()) return
 
-    ensureClip()
+    drawClipRegion()
     ensureTransform()
     ensureComposite()
+    ctx.save()
+    doClip()
     ctx.drawImage(image, x, y)
+    ctx.restore()
   }
 
   fun drawImage(image: ImageSource, x: Double, y: Double, width: Double, height: Double) {
     if (image.isEmpty()) return
 
-    ensureClip()
+    drawClipRegion()
     ensureTransform()
     ensureComposite()
-
+    ctx.save()
+    doClip()
     ctx.drawImage(image, x, y, width, height)
+    ctx.restore()
   }
 
   fun drawImage(image: ImageSource, sx: Double, sy: Double, sw: Double, sh: Double, dx: Double, dy: Double, dw: Double, dh: Double) {
     if (image.isEmpty()) return
 
-    ensureClip()
+    drawClipRegion()
     ensureTransform()
     ensureComposite()
-
+    ctx.save()
+    doClip()
     ctx.drawImage(
       image,
       sx = sx, sy = sy, sw = sw, sh = sh,
       dx = dx, dy = dy, dw = dw, dh = dh
     )
+    ctx.restore()
   }
 
   fun drawImage(image: ImageSource, tx: List<Double>) {
     if (image.isEmpty()) return
 
-    ensureClip()
+    drawClipRegion()
     ensureTransform()
     ensureComposite()
 
     ctx.apply {
       save()
-
+      doClip()
       transform(tx[0], tx[1], tx[2], tx[3], tx[4], tx[5])
       ctx.drawImage(image, 0.0, 0.0)
 
@@ -506,12 +543,14 @@ class Renderer(private val renderingSurface: RenderingSurface) {
   }
 
   fun paintOval(paintType: PaintType, x: Double, y: Double, width: Double, height: Double) {
-    ensureClip()
+    drawClipRegion()
     ensureTransform()
     ensurePaint(paintType)
     ensureComposite()
 
     ctx.apply {
+      save()
+      doClip()
       beginPath()
       ellipse(x + width / 2, y + height / 2, width / 2, height / 2, 0.0, 0.0, 2 * PI)
       when (paintType) {
@@ -519,11 +558,12 @@ class Renderer(private val renderingSurface: RenderingSurface) {
 
         PaintType.FILL -> fill()
       }
+      restore()
     }
   }
 
   fun copyArea(x: Double, y: Double, width: Double, height: Double, dx: Double, dy: Double) {
-    ensureClip()
+    drawClipRegion()
     ensureTransform()
     ensureComposite()
 
@@ -541,7 +581,7 @@ class Renderer(private val renderingSurface: RenderingSurface) {
       // Finally, we paint the image.
 
       save()
-
+      doClip()
       // 1:
       beginPath()
       rect(x + dx, y + dy, width, height)
@@ -603,7 +643,7 @@ class Renderer(private val renderingSurface: RenderingSurface) {
 
       companion object {
 
-        private val DEFAULT_IDENTITY_SPACE_CLIP: CommonShape? = null
+        private val DEFAULT_IDENTITY_SPACE_CLIP: CommonShape? = CommonRectangle(0.0,0.0,0.0,0.0)
         private val DEFAULT_TRANSFORM: List<Double> = IDENTITY_LIST
         private val DEFAULT_STROKE_DATA: StrokeData = Defaults.STROKE
         private var DEFAULT_FONT: String = "${Defaults.FONT_SIZE}px Arial"
