@@ -153,7 +153,6 @@ public fun Iterable<Pair<ServerDrawCommandsEvent.Target, List<ServerWindowEvent>
     }
   }
 
-  mergeDrawStringEvents(withoutUnneededStates)
   val shrunk = mutableListOf<ServerDrawCommandsEvent>()
   var lastTarget: ServerDrawCommandsEvent.Target? = null
   val lastEvents = mutableListOf<ServerWindowEvent>()
@@ -174,78 +173,62 @@ public fun Iterable<Pair<ServerDrawCommandsEvent.Target, List<ServerWindowEvent>
 
   lastTarget?.let { flush(it) }
 
+  mergeDrawEvents(shrunk)
+
   return shrunk
 }
 
-private fun mergeDrawStringEvents(commands: MutableList<ServerDrawCommandsEvent>): MutableList<ServerDrawCommandsEvent> {
-  if (commands.size < 2) {
-    return commands
+private fun mergeDrawEvents(events: MutableList<ServerDrawCommandsEvent>) {
+  if (events.isEmpty()) {
+    return
   }
+  var preDrawStringEvent: ServerDrawStringEvent? = null
+  var preSetClipEvent: ServerSetClipEvent? = null
 
-  val iterator = commands.iterator()
-  var preCommand = commands[0]
-  var preWidth: Double? = null
-
-  while (iterator.hasNext()) {
-    val thisCommand = iterator.next()
-    if (thisCommand.target != preCommand.target) {
-      preCommand = thisCommand
-      continue
+  events.forEach { serverDrawEvent ->
+    if (serverDrawEvent.drawEvents !is ArrayList) {
+      return
     }
+    val arrayList = serverDrawEvent.drawEvents as ArrayList<ServerWindowEvent>
+    val iterator = arrayList.iterator()
 
-    val preDrawEvents = preCommand.drawEvents
-    val thisDrawEvents = thisCommand.drawEvents
-
-    // events to judge whether two commands can be merged: shape with same y, drawStringEvent with same y
-    val preClipEvent = getListElementByClazzType(preDrawEvents, ServerSetClipEvent::class.java)
-    val thisClipEvent = getListElementByClazzType(thisDrawEvents, ServerSetClipEvent::class.java)
-    val preDrawStringEvent = getListElementByClazzType(preDrawEvents, ServerDrawStringEvent::class.java)
-    val thisDrawStringEvent = getListElementByClazzType(thisDrawEvents, ServerDrawStringEvent::class.java)
-
-    if (preClipEvent is ServerSetClipEvent && thisClipEvent is ServerSetClipEvent
-        && preDrawStringEvent is ServerDrawStringEvent && thisDrawStringEvent is ServerDrawStringEvent) {
-      // cache the width of the first string before merge
-      if (preWidth == null) {
-        preWidth = preDrawStringEvent.desiredWidth
-      }
-
-      if (thisDrawStringEvent.desiredWidth == preWidth
-          && judgeDrawStringMergeCondition(thisDrawEvents, preClipEvent, thisClipEvent, preDrawStringEvent, thisDrawStringEvent)) {
-        // fill blank space between two strings when we merge them
-        val blankCount = thisDrawStringEvent.x - preDrawStringEvent.x - preDrawStringEvent.desiredWidth
-        // todo remove magic blank width 7
-        preDrawStringEvent.str = preDrawStringEvent.str + " ".repeat((blankCount / 7).toInt()) + thisDrawStringEvent.str
-        // change the width of the first merged drawStringEvent
-        preDrawStringEvent.desiredWidth = thisDrawStringEvent.x - preDrawStringEvent.x + thisDrawStringEvent.desiredWidth
-
-        iterator.remove()
+    while (iterator.hasNext()) {
+      val curWindowEvent = iterator.next()
+      // merge ServerSetClipEvent
+      if (curWindowEvent is ServerSetClipEvent && curWindowEvent.shape is CommonRectangle) {
+        if (preSetClipEvent == null) {
+          preSetClipEvent = curWindowEvent
+        }
+        else {
+          val preSetClipShape = preSetClipEvent!!.shape as CommonRectangle
+          val curSetClipShape = curWindowEvent.shape as CommonRectangle
+          // can merge
+          if (preSetClipShape.x < curSetClipShape.x && preSetClipShape.y == curSetClipShape.y
+              && preSetClipShape.width > curSetClipShape.width && preSetClipShape.height == curSetClipShape.height) {
+            iterator.remove()
+          }
+        }
         continue
       }
+      // merge ServerDrawStringEvent
+      if (curWindowEvent is ServerDrawStringEvent) {
+        if (preDrawStringEvent == null) {
+          preDrawStringEvent = curWindowEvent
+          continue
+        }
+        // can merge
+        if (preDrawStringEvent!!.y == curWindowEvent.y && (curWindowEvent.x - preDrawStringEvent!!.x - preDrawStringEvent!!.desiredWidth) % 7.0 == 0.0) {
+          val blankCount = (curWindowEvent.x - preDrawStringEvent!!.x - preDrawStringEvent!!.desiredWidth).toInt() / 7
+          preDrawStringEvent!!.str += " ".repeat(blankCount) + curWindowEvent.str
+          preDrawStringEvent!!.desiredWidth += curWindowEvent.desiredWidth + blankCount * 7
+          iterator.remove()
+          continue
+        }
+      }
+      preDrawStringEvent = null
+      preSetClipEvent = null
     }
-
-    preCommand = thisCommand
-    preWidth = null
   }
-  return commands
-}
-
-private fun getListElementByClazzType(events: List<ServerWindowEvent>, type: Class<out ServerWindowEvent>): ServerWindowEvent? {
-  for (event in events) {
-    if (event::class.java == type) {
-      return event
-    }
-  }
-  return null
-}
-
-private fun judgeDrawStringMergeCondition(thisDrawEvents: List<ServerWindowEvent>,
-                                          preClipEvent: ServerSetClipEvent, thisClipEvent: ServerSetClipEvent,
-                                          preDrawStringEvent: ServerDrawStringEvent, thisDrawStringEvent: ServerDrawStringEvent): Boolean {
-  return thisDrawEvents.size == 2 // only process certain 2 events
-         && preClipEvent.shape is CommonRectangle && thisClipEvent.shape is CommonRectangle
-         && preDrawStringEvent.y == thisDrawStringEvent.y
-         && (preClipEvent.shape as CommonRectangle).y == (thisClipEvent.shape as CommonRectangle).y
-         && (preClipEvent.shape as CommonRectangle).height == (thisClipEvent.shape as CommonRectangle).height
 }
 
 private val logger = Logger("TransformKt")
