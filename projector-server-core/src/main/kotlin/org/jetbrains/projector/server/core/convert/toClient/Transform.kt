@@ -218,9 +218,10 @@ private fun mergeDrawEvents(events: MutableList<ServerDrawCommandsEvent>) {
         }
         // can merge
         if (preDrawStringEvent!!.y == curWindowEvent.y && (curWindowEvent.x - preDrawStringEvent!!.x - preDrawStringEvent!!.desiredWidth) % 7.0 == 0.0) {
-          val blankCount = (curWindowEvent.x - preDrawStringEvent!!.x - preDrawStringEvent!!.desiredWidth).toInt() / 7
+          val width=curWindowEvent.x - preDrawStringEvent!!.x - preDrawStringEvent!!.desiredWidth
+          val blankCount = width.toInt() / 7
           preDrawStringEvent!!.str += " ".repeat(blankCount) + curWindowEvent.str
-          preDrawStringEvent!!.desiredWidth += curWindowEvent.desiredWidth + blankCount * 7
+          preDrawStringEvent!!.desiredWidth += curWindowEvent.desiredWidth + width
           iterator.remove()
           continue
         }
