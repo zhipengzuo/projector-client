@@ -54,6 +54,8 @@ val kotlinVersion: String by project
 val ktorVersion: String by project
 val selenideVersion: String by project
 val slf4jVersion: String by project
+val javalinVersion: String by project
+val jacksonVersion: String by project
 
 val devBuilding = rootProject.file("local.properties").let {
   when (it.canRead()) {
@@ -138,6 +140,8 @@ dependencies {
   implementation("org.slf4j:slf4j-simple:$slf4jVersion")
   implementation("dnsjava:dnsjava:$dnsjavaVersion")
   implementation("org.jsoup:jsoup:$jsoupVersion")
+  implementation("io.javalin:javalin:$javalinVersion")
+  implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
 
   fun ModuleDependency.setupMarkdownDependency() {
     // These dependencies cannot be resolved as I cannot find the repository they are located in
