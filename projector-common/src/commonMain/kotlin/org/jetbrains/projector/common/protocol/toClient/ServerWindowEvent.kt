@@ -105,7 +105,7 @@ data class ServerPaintRectEvent(
   @SerialName("c")
   val y: Double,
   @SerialName("d")
-  val width: Double,
+  var width: Double,
   @SerialName("e")
   val height: Double,
 ) : ServerWindowPaintEvent()
