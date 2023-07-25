@@ -103,6 +103,7 @@ actual object ParamsProvider {
   val LAYOUT_TYPE: LayoutType
   val SCALING_RATIO: Double
     get() = SYSTEM_SCALING_RATIO * USER_SCALING_RATIO
+  val COMPRESSION_TYPE: CompressionType
 
   init {
     with(URL(window.location.href)) {
@@ -162,7 +163,17 @@ actual object ParamsProvider {
         "frAzerty" -> LayoutType.FR_AZERTY
         else -> LayoutType.JS_DEFAULT
       }
+      COMPRESSION_TYPE = when (searchParams.get("compressionType")) {
+        "gzip" -> CompressionType.GZIP
+        "br" -> CompressionType.BR
+        else -> CompressionType.GZIP
+      }
     }
+  }
+
+  enum class CompressionType {
+    GZIP,
+    BR
   }
 
   enum class ToClientFormat {

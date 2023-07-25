@@ -36,7 +36,11 @@ import org.jetbrains.projector.common.protocol.toServer.ToServerMessageEncoder
 object SupportedTypesProvider {
 
   val supportedToClientDecompressors: List<MessageDecompressor<ByteArray>> = when (ParamsProvider.ENABLE_COMPRESSION) {
-    true -> listOf(GZipToClientMessageDecompressor)
+    true -> when(ParamsProvider.COMPRESSION_TYPE) {
+      ParamsProvider.CompressionType.BR -> listOf(BrotliToClientMessageDecompressor, GZipToClientMessageDecompressor)
+      ParamsProvider.CompressionType.GZIP -> listOf(GZipToClientMessageDecompressor)
+      else -> listOf(GZipToClientMessageDecompressor)
+    }
 
     false -> listOf(NotDecompressor())
   }

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.jetbrains.projector.common.protocol.handshake
+package org.jetbrains.projector.server.core.protocol
 
-enum class CompressionType {
-  NONE, GZIP, BR
+import org.jetbrains.projector.common.protocol.handshake.CompressionType
+import org.jetbrains.projector.common.protocol.compress.MessageCompressor
+import org.jetbrains.projector.common.protocol.toClient.ToClientTransferableType
+import java.io.ByteArrayOutputStream
+import com.nixxcode.jvmbrotli.enc.BrotliOutputStream
+import com.nixxcode.jvmbrotli.enc.Encoder
+
+internal object BrotliMessageCompressor : MessageCompressor<ToClientTransferableType> {
+
+  override fun compress(data: ToClientTransferableType): ToClientTransferableType {
+    return ByteArrayOutputStream()
+      .apply {
+        BrotliOutputStream(this, Encoder.Parameters().setQuality(4)).apply {
+          write(data)
+          close()
+        }
+      }
+      .toByteArray()
+  }
+
+  override val compressionType = CompressionType.BR
 }

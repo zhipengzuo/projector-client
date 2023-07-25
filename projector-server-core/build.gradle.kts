@@ -142,6 +142,8 @@ dependencies {
   implementation("org.jsoup:jsoup:$jsoupVersion")
   implementation("io.javalin:javalin:$javalinVersion")
   implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+  implementation("com.nixxcode.jvmbrotli:jvmbrotli:0.2.0")
+  implementation("com.nixxcode.jvmbrotli:jvmbrotli-linux-x86-amd64:0.2.0")
 
   fun ModuleDependency.setupMarkdownDependency() {
     // These dependencies cannot be resolved as I cannot find the repository they are located in
