@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.jetbrains.projector.common.protocol.handshake
+package org.jetbrains.projector.client.web.protocol
 
-enum class CompressionType {
-  NONE, GZIP, BR
+import org.jetbrains.projector.common.protocol.compress.MessageDecompressor
+import org.jetbrains.projector.common.protocol.handshake.CompressionType
+
+object BrotliToClientMessageDecompressor : MessageDecompressor<ByteArray> {
+
+  override fun decompress(data: ByteArray): ByteArray {
+    return brotli(data)
+  }
+
+  override val compressionType = CompressionType.BR
+
+  private val brotli: dynamic = js("window.brotli")
 }
