@@ -9,11 +9,6 @@ Please check out [documentation](https://jetbrains.github.io/projector-client/mk
 ### Prerequisites
 
 - Install Java: <https://bell-sw.com/pages/downloads>
-- Install Node.js and NPM: <https://nodejs.org/en/download>
-    - You have to use 12.16.1 version
-    - You can try use Node Version Manager
-        - Linux and Mac: <https://github.com/nvm-sh/nvm>
-        - Windows: <https://github.com/coreybutler/nvm-windows>
 - If your OS is not Windows you must install Wine:
     - Mac: 
         - `brew cask install xquartz`
@@ -36,3 +31,13 @@ After that, executables will be generated in the `build/electronOut` dir.
 ```shell script
 ./gradlew :projector-launcher:electronProductionRun
 ```
+
+### Development
+
+If you're a UI developer, and you want to speed up iterations when you constantly change HTML files, here are two new tasks introduced in 1.1.0: `electronRun` and `electronBuildAndRun`.
+
+All three tasks are grouped into a new "development" group in Gradle. This means, if you use Gradle Plugin for IntelliJ, you can easily visually find it in a separate node of the tree, obviously called "development" too.
+
+The problem we're trying to solve with this: preparing the full dist environment with `electronProductionRun` takes unbelievably long time, therefore you can build only HTML and Kotlin (with `electronBuildAndRun`) or build nothing at all (`electronRun`).
+
+Please note, that the *fastest* way to get to do quick and dirty experiments with HTML and preload JS is to build the project only once (with `electronProductionRun`), then open the command line, change the directory to `build/distributions` and then run command `npx electron .`. You want to do this only if you work on quick fixing HTML. For building Kotlin, dependencies, and everything else `electronBuildAndRun` is still required.

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,8 +24,9 @@
 package org.jetbrains.projector.server.core.ij.log
 
 import org.jetbrains.projector.common.misc.Do
-import org.jetbrains.projector.server.core.ij.invokeWhenIdeaIsInitialized
 import org.jetbrains.projector.util.loading.UseProjectorLoader
+import org.jetbrains.projector.util.loading.state.IdeState
+import org.jetbrains.projector.util.loading.state.whenOccurred
 import org.jetbrains.projector.util.logging.ConsoleJvmLogger
 import org.jetbrains.projector.util.logging.Logger
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -43,14 +44,8 @@ public class DelegatingJvmLogger(tag: String) : Logger {
   private val consoleJvmLogger = ConsoleJvmLogger(tag)
 
   init {
-    invokeWhenIdeaIsInitialized(
-      "get IJ Logger",
-      onNoIdeaFound = {
-        ideaLoggerStateLock.write {
-          ideaLoggerState = IdeaLoggerState.NoIj
-        }
-      },
-      onInitialized = {
+    if (IdeState.isIdeAttached) {
+      IdeState.BOOTSTRAP.whenOccurred(purpose = null) {
         ideaLoggerStateLock.write {
           val notLoggedEvents = (ideaLoggerState as IdeaLoggerState.WaitingIdeaLoggerState).notLoggedEvents
 
@@ -67,7 +62,11 @@ public class DelegatingJvmLogger(tag: String) : Logger {
           ideaLoggerState = initializedIdeaLoggerState
         }
       }
-    )
+    } else {
+      ideaLoggerStateLock.write {
+        ideaLoggerState = IdeaLoggerState.NoIj
+      }
+    }
   }
 
   override fun error(t: Throwable?, lazyMessage: () -> String): Unit = ideaLoggerStateLock.read {

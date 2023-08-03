@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -142,6 +142,7 @@ object ManualJsonToClientMessageDecoder : ToClientMessageDecoder {
       this["n"] as Boolean,
       this["o"] as Boolean,
       this["p"] as Int?,
+      this["q"] as Float,
     )
   }
 
@@ -331,7 +332,7 @@ object ManualJsonToClientMessageDecoder : ToClientMessageDecoder {
       "a" -> content.toColor()
       "b" -> PaintValue.Gradient(
         content["a"].unsafeCast<Json>().toPoint(), content["b"].unsafeCast<Json>().toPoint(),
-        content["c"] as Int, content["d"] as Int
+        content["c"].unsafeCast<Array<Double>>().toList(), content["d"].unsafeCast<Array<Int>>().toList(),
       )
       "c" -> PaintValue.Unknown(content["a"] as String)
       else -> throw IllegalArgumentException("Unsupported paint value type: ${JSON.stringify(this)}")

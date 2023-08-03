@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@ package org.jetbrains.projector.client.web.debug
 
 import kotlinx.browser.document
 import kotlinx.browser.window
+import org.jetbrains.projector.client.web.externalDeclarartion.pointerEvents
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.HTMLSpanElement
 
@@ -54,7 +55,7 @@ class DivSentReceivedBadgeShower : SentReceivedBadgeShower {
       style.bottom = "30px"
       style.right = "5%"
       style.zIndex = "1"
-      style.asDynamic().pointerEvents = "none"
+      style.pointerEvents = "none"
 
       style.padding = "5px"
       style.background = DEFAULT_SENT_BACKGROUND
@@ -71,7 +72,7 @@ class DivSentReceivedBadgeShower : SentReceivedBadgeShower {
       style.bottom = "10px"
       style.right = "5%"
       style.zIndex = "1"
-      style.asDynamic().pointerEvents = "none"
+      style.pointerEvents = "none"
 
       style.padding = "5px"
       style.background = DEFAULT_RECEIVED_BACKGROUND

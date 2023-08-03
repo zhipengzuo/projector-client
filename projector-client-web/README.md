@@ -9,9 +9,7 @@ Contents:
 * [Shortcuts](#shortcuts) &mdash; currently they are needed for debug purposes.
 
 ## Running
-The latest commit from master is built and deployed here: <https://projector.jetbrains.com/client/?host=HOST&port=PORT> (don't forget to
-set `HOST`
-and `PORT` to match your server's).
+The latest commit from master is built and deployed on our site. [More info](https://jetbrains.github.io/projector-client/mkdocs/latest/ij_user_guide/accessing/#latest-client)
 
 The latest version can be downloaded at the [Artifacts page](https://github.com/JetBrains/projector-client/releases).
 
@@ -68,6 +66,7 @@ Name | Type | Default value | Description
 `cacheSize` | Int | `5M` | Set size of cache for images in Chars.
 `blockClosing` | Boolean | `true` | Enable blocking of accidental closing of the web page
 `relayServerId` | String? | Not present | Identifier of Projector server to connect to for relay connection. Warning: Static files must be accessed via https when relay is used.
+`speculativeTypingLatency` | Int | `0` | Sets latency before key press event is sent to server if speculative symbol for the event was drawn.
 
 ## Shortcuts
 - `Ctrl + F10` prints statistics to the browser console. Example:  

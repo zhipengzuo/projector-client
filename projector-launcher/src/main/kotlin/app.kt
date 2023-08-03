@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,11 @@ external val process: dynamic
 external val __dirname: dynamic
 
 fun main() {
+  // Full Bootstrap CSS package
   require("bootstrap/dist/css/bootstrap.min.css")
+  require("bootstrap/dist/css/bootstrap-grid.min.css")
+  require("bootstrap/dist/css/bootstrap-reboot.min.css")
+  require("bootstrap/dist/css/bootstrap-utilities.min.css")
 
   val argv = commandLineArguments()
   var url = argv.last()

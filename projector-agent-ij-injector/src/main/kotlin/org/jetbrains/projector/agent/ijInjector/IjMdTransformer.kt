@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,12 +29,12 @@ import com.intellij.openapi.util.BuildNumber
 import com.intellij.ui.jcef.JBCefApp
 import javassist.CtClass
 import org.jetbrains.projector.agent.common.transformation.TransformationResult
-import org.jetbrains.projector.agent.common.transformation.TransformerSetupBase
 import org.jetbrains.projector.agent.common.transformation.classForNameOrNull
 import org.jetbrains.projector.ij.md.markdownPlugin
 import org.jetbrains.projector.util.loading.ProjectorClassLoader
+import org.jetbrains.projector.util.loading.state.IdeState
 
-internal object IjMdTransformer : TransformerSetupBase<IjInjector.AgentParameters>() {
+internal object IjMdTransformer : IdeTransformerSetup<IjInjector.AgentParameters>() {
 
   // language=java prefix="import " suffix=";"
   private const val javaFxClass = "org.intellij.plugins.markdown.ui.preview.javafx.JavaFxHtmlPanelProvider"
@@ -44,6 +44,9 @@ internal object IjMdTransformer : TransformerSetupBase<IjInjector.AgentParameter
 
   // language=java prefix="import " suffix=";"
   private const val previewFileEditorClass = "org.intellij.plugins.markdown.ui.preview.MarkdownPreviewFileEditor"
+
+  override val loadingState: IdeState
+    get() = IdeState.CONFIGURATION_STORE_INITIALIZED
 
   override fun getTransformations(
     parameters: IjInjector.AgentParameters,

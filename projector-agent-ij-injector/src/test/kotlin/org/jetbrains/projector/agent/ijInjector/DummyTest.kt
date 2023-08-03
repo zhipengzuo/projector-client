@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,12 +23,6 @@
  */
 package org.jetbrains.projector.agent.ijInjector
 
-import kotlin.test.Test
-import kotlin.test.assertTrue
+import io.kotest.core.spec.style.StringSpec
 
-class DummyTest {
-  @Test
-  fun `dummy test for coverage building`() {
-    assertTrue(true)
-  }
-}
+class DummyTest : StringSpec({ "empty test for coverage building" {} })

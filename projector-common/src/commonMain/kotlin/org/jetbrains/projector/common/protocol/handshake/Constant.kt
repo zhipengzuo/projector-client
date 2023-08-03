@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -61,4 +61,7 @@ val commonVersionList = listOf(
   1980644253,
   1328208692,
   -1867356666,
+  1741530029,
+  2040465192,
+  -795345262,
 )

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,4 +26,4 @@ package org.jetbrains.projector.server.core.util
 import java.net.InetAddress
 import java.net.InetSocketAddress
 
-public fun getWildcardHostAddress(): InetAddress = InetSocketAddress(0).getAddress()
+public fun getWildcardHostAddress(): InetAddress = InetSocketAddress(0).address

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,11 +25,10 @@ package org.jetbrains.projector.agent.ijInjector
 
 import com.intellij.util.ui.UIUtil
 import javassist.CtClass
-import org.jetbrains.projector.agent.common.transformation.TransformerSetupBase
 
-internal object IjUiUtilsTransformer : TransformerSetupBase<IjInjector.AgentParameters>() {
+internal object IjUiUtilsTransformer : IdeTransformerSetup<IjInjector.AgentParameters>() {
 
-  override val classTransformations: Map<Class<*>, (CtClass) -> ByteArray?> = mapOf(
+  override fun getTransformations(): Map<Class<*>, (CtClass) -> ByteArray?> = mapOf(
     UIUtil::class.java to ::transformUiUtil,
   )
 

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -261,10 +261,10 @@ class Renderer(private val renderingSurface: RenderingSurface) {
     requestedState.paint = color.toColor()
   }
 
-  fun setGradientPaint(p1: Point, p2: Point, color1: Int, color2: Int) {
-    val linearGradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y).apply {
-      addColorStop(0.0, color1)
-      addColorStop(1.0, color2)
+  fun setGradientPaint(p1: Point, p2: Point, fractions: List<Double>, argbs: List<Int>) {
+    val linearGradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y)
+    fractions.zip(argbs).forEach { (fraction, argb) ->
+      linearGradient.addColorStop(fraction, argb)
     }
 
     requestedState.paint = linearGradient

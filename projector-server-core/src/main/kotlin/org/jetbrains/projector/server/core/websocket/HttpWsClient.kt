@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,7 @@ import kotlin.concurrent.withLock
 
 public abstract class HttpWsClient(
   private val relayUrl: String,
-  private val serverId: String
+  private val serverId: String,
 ) : HttpWsTransport {
 
   private val clients: MutableMap<String, WebSocketClient> = mutableMapOf()
@@ -89,7 +89,17 @@ public abstract class HttpWsClient(
     }
 
     override fun onClose(code: Int, reason: String?, remote: Boolean) {
-      this@HttpWsClient.onWsClose(connection)
+      if (wasInitialized == null) {
+        logger.info { "Closing control connection code: $code, reason: $reason" }
+        logger.info { "Please check relay status." }
+        lock.withLock {
+          wasInitialized = false
+          condition.signal()
+        }
+      }
+      else {
+        this@HttpWsClient.onWsClose(connection)
+      }
     }
 
     override fun onError(ex: Exception) {

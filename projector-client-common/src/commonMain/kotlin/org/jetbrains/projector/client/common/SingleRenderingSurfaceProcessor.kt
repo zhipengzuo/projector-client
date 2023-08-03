@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -73,8 +73,8 @@ class SingleRenderingSurfaceProcessor(private val renderingSurface: RenderingSur
               is PaintValue.Gradient -> renderer.setGradientPaint(
                 p1 = paintValue.p1,
                 p2 = paintValue.p2,
-                color1 = paintValue.argb1,
-                color2 = paintValue.argb2
+                fractions = paintValue.fractions,
+                argbs = paintValue.argbs,
               )
 
               is PaintValue.Unknown -> logUnsupportedCommand(it)

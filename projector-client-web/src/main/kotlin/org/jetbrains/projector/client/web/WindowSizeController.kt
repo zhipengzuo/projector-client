@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -50,12 +50,8 @@ class WindowSizeController(private val stateMachine: ClientStateMachine) {
     stateMachine.fire(ClientAction.WindowResize)
   }
 
-  fun addListener() {
+  init {
     window.addEventListener(RESIZE_EVENT_TYPE, ::handleResizeEvent)
-  }
-
-  fun removeListener() {
-    window.removeEventListener(RESIZE_EVENT_TYPE, ::handleResizeEvent)
   }
 
   companion object {

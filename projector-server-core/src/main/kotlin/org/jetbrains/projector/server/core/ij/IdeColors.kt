@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,8 @@ import com.intellij.util.ui.JBUI.CurrentTheme.Popup.borderColor
 import org.jetbrains.projector.common.protocol.data.PaintValue
 import org.jetbrains.projector.common.protocol.toClient.ServerWindowColorsEvent
 import org.jetbrains.projector.util.loading.UseProjectorLoader
+import org.jetbrains.projector.util.loading.state.IdeState
+import org.jetbrains.projector.util.loading.state.whenOccurred
 import org.jetbrains.projector.util.logging.Logger
 
 /**
@@ -47,7 +49,7 @@ public class IdeColors(private val onColorsChanged: (ServerWindowColorsEvent.Col
     private set
 
   init {
-    invokeWhenIdeaIsInitialized("Getting IDE colors") {
+    IdeState.CONFIGURATION_STORE_INITIALIZED.whenOccurred("Getting IDE colors") {
       subscribeToIdeLafManager()
     }
   }

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,4 +30,32 @@ inline var CSSStyleDeclaration.textDecorationThickness: String?
   get() = asDynamic().textDecorationThickness.unsafeCast<String?>()
   set(value) {
     asDynamic().textDecorationThickness = value
+  }
+
+// todo: https://youtrack.jetbrains.com/issue/KT-51370
+inline var CSSStyleDeclaration.overscrollBehaviorX: String?
+  get() = asDynamic().overscrollBehaviorX.unsafeCast<String?>()
+  set(value) {
+    asDynamic().overscrollBehaviorX = value
+  }
+
+// todo: https://youtrack.jetbrains.com/issue/KT-51370
+inline var CSSStyleDeclaration.overscrollBehaviorY: String?
+  get() = asDynamic().overscrollBehaviorY.unsafeCast<String?>()
+  set(value) {
+    asDynamic().overscrollBehaviorY = value
+  }
+
+// todo: https://youtrack.jetbrains.com/issue/KT-51370
+inline var CSSStyleDeclaration.touchAction: String?
+  get() = asDynamic().touchAction.unsafeCast<String?>()
+  set(value) {
+    asDynamic().touchAction = value
+  }
+
+// todo: https://youtrack.jetbrains.com/issue/KT-51370
+inline var CSSStyleDeclaration.pointerEvents: String?
+  get() = asDynamic().pointerEvents.unsafeCast<String?>()
+  set(value) {
+    asDynamic().pointerEvents = value
   }

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -166,12 +166,8 @@ internal class DomContext2d(private val myContext2d: CanvasRenderingContext2D) :
     arcTo(x, y, x + w, y, r2)
   }
 
-  fun arcTo(x1: Double, y1: Double, x2: Double, y2: Double, radius: Double) {
+  private fun arcTo(x1: Double, y1: Double, x2: Double, y2: Double, radius: Double) {
     myContext2d.arcTo(x1, y1, x2, y2, radius)
-  }
-
-  fun arc(x: Double, y: Double, radius: Double, startAngle: Double, endAngle: Double) {
-    myContext2d.arc(x, y, radius, startAngle, endAngle)
   }
 
   override fun rect(x: Double, y: Double, w: Double, h: Double) {

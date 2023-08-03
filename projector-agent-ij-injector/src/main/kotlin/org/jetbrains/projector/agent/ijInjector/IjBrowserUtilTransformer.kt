@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,11 +27,11 @@ import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.project.Project
 import javassist.CtClass
 import org.jetbrains.projector.agent.common.getDeclaredMethod
-import org.jetbrains.projector.agent.common.transformation.TransformerSetupBase
+import java.net.URI
 
-internal object IjBrowserUtilTransformer : TransformerSetupBase<IjInjector.AgentParameters>() {
+internal object IjBrowserUtilTransformer : IdeTransformerSetup<IjInjector.AgentParameters>() {
 
-  override val classTransformations: Map<Class<*>, (CtClass) -> ByteArray?> = mapOf(
+  override fun getTransformations(): Map<Class<*>, (CtClass) -> ByteArray?> = mapOf(
     BrowserUtil::class.java to ::transformBrowserUtil,
   )
 
@@ -42,23 +42,28 @@ internal object IjBrowserUtilTransformer : TransformerSetupBase<IjInjector.Agent
   private fun transformBrowserUtil(clazz: CtClass): ByteArray {
 
     clazz
-      .getDeclaredMethod("browse", String::class.java)
-      .setBody(
-        // language=java prefix="class BrowserUtil { public static void browse(@NotNull String $1)" suffix="}"
-        """
-          {
-            java.awt.Desktop.getDesktop().browse(new java.net.URI($1));
-          }
-        """.trimIndent()
-      )
-
-    clazz
       .getDeclaredMethod("browse", String::class.java, Project::class.java)
       .setBody(
         // language=java prefix="class BrowserUtil { public static void browse(@NotNull String $1, @Nullable Project $2)" suffix="}"
         """
           {
-            java.awt.Desktop.getDesktop().browse(new java.net.URI($1));
+            if ($1.contains("account.jetbrains.com") && $1.contains("redirect_uri")) {
+              // fallback to token copy-pasting
+              throw new IllegalArgumentException("Projector cannot automatically process IDE licensing. See PRJ-691; PRJ-750; PRJ-779");
+            }
+            java.net.URI uri = com.intellij.openapi.vfs.VfsUtil.toUri($1);
+            java.awt.Desktop.getDesktop().browse(uri);
+          }
+        """.trimIndent()
+      )
+
+    clazz
+      .getDeclaredMethod("browse", URI::class.java)
+      .setBody(
+        // language=java prefix="class BrowserUtil { public static void browse(@NotNull java.net.URI $1)" suffix="}"
+        """
+          {
+            java.awt.Desktop.getDesktop().browse($1);
           }
         """.trimIndent()
       )

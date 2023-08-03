@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -103,4 +103,10 @@ data class WindowData(
   val isAlwaysOnTop: Boolean = false,
   @SerialName("p")
   val parentId: Int? = null,
+  /**
+   * Rendering scale used on the host for this window.
+   * This is intended to help the client size rendering canvas, as `bounds` operates on "user pixels" (as opposed to hardware pixels)
+   */
+  @SerialName("q")
+  val renderingScale: Float = 1f,
 )

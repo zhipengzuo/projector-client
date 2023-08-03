@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,9 +44,9 @@ sealed class PaintValue {
     @SerialName("b")
     val p2: Point,
     @SerialName("c")
-    val argb1: Int,
+    val fractions: List<Double>,
     @SerialName("d")
-    val argb2: Int,
+    val argbs: List<Int>,
   ) : PaintValue()
 
   @Serializable

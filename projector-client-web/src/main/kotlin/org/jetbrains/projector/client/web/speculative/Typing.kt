@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,7 +40,7 @@ sealed class Typing {
 
   abstract fun removeSpeculativeImage()
 
-  abstract fun addEventChar(event: ClientKeyPressEvent)
+  abstract fun addEventChar(event: ClientKeyPressEvent): Boolean
 
   abstract fun dispose()
 
@@ -54,8 +54,8 @@ sealed class Typing {
       // do nothing
     }
 
-    override fun addEventChar(event: ClientKeyPressEvent) {
-      // do nothing
+    override fun addEventChar(event: ClientKeyPressEvent): Boolean {
+      return false
     }
 
     override fun dispose() {
@@ -125,14 +125,14 @@ sealed class Typing {
              || event.char.category.fromOtherUnicodeGroup
     }
 
-    override fun addEventChar(event: ClientKeyPressEvent) {
-      if (shouldSkipEvent(event)) return
+    override fun addEventChar(event: ClientKeyPressEvent): Boolean {
+      if (shouldSkipEvent(event)) return false
 
-      val currentCarets = carets as? ServerCaretInfoChangedEvent.CaretInfoChange.Carets ?: return
+      val currentCarets = carets as? ServerCaretInfoChangedEvent.CaretInfoChange.Carets ?: return false
 
-      val canvas = canvasByIdGetter(currentCarets.editorWindowId) ?: return
+      val canvas = canvasByIdGetter(currentCarets.editorWindowId) ?: return false
 
-      val firstCaretLocation = currentCarets.caretInfoList.firstOrNull()?.locationInWindow ?: return  // todo: support multiple carets
+      val firstCaretLocation = currentCarets.caretInfoList.firstOrNull()?.locationInWindow ?: return false  // todo: support multiple carets
 
       ensureSpeculativeCanvasSize(canvas)
 
@@ -183,6 +183,8 @@ sealed class Typing {
 
       speculativeCanvasImage.style.display = "block"
       canvas.style.display = "none"
+
+      return true
     }
 
     private fun ensureSpeculativeCanvasSize(canvas: HTMLCanvasElement) {

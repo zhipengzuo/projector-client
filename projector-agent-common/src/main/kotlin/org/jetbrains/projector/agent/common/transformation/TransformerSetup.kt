@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,22 +26,24 @@ package org.jetbrains.projector.agent.common.transformation
 import javassist.ClassPool
 import javassist.CtClass
 import javassist.LoaderClassPath
+import java.lang.instrument.ClassDefinition
 import java.lang.instrument.ClassFileTransformer
 import java.lang.instrument.Instrumentation
 
-public interface TransformerSetup<P> {
-
-  /**
-   * Maps class to function that is invoked to get transformed class bytecode.
-   * Override this property if your transformations are agnostic of agent parameters and classloader.
-   */
-  public val classTransformations: Map<Class<*>, (CtClass) -> ByteArray?>
-    get() = emptyMap()
+public interface TransformerSetup<Params> {
 
   /**
    * Function to be invoked when transformation finishes.
    */
   public var transformationResultConsumer: (TransformationResult) -> Unit
+
+  /**
+   * Maps class to function that is invoked to get transformed class bytecode.
+   * Override this method if your transformations are agnostic of agent parameters and classloader.
+   *
+   * @return mapping from class to function that is invoked to get transformed class bytecode
+   */
+  public fun getTransformations(): Map<Class<*>, (CtClass) -> ByteArray?> = emptyMap()
 
   /**
    * Maps class to function that is invoked to get transformed class bytecode.
@@ -54,7 +56,7 @@ public interface TransformerSetup<P> {
    * @param classLoader classloader returned by [getClassLoader] method
    * @return mapping from class to function that is invoked to get transformed class bytecode
    */
-  public fun getTransformations(parameters: P, classLoader: ClassLoader): Map<Class<*>, (CtClass) -> ByteArray?> = classTransformations
+  public fun getTransformations(parameters: Params, classLoader: ClassLoader): Map<Class<*>, (CtClass) -> ByteArray?> = getTransformations()
 
   /**
    * Classloader that will be passed to [getTransformations] method. This method is useful if you need to transform classes of a plugin.
@@ -63,7 +65,7 @@ public interface TransformerSetup<P> {
    * @param parameters agent parameters that are passed from server
    * @return Classloader that will be passed to [getTransformations] method and used to get bytecode of classes that will be transformed
    */
-  public fun getClassLoader(parameters: P): ClassLoader = javaClass.classLoader
+  public fun getClassLoader(parameters: Params): ClassLoader = javaClass.classLoader
 
   /**
    * Reports whether transformations of thus transformer are applicable for given parameters
@@ -71,7 +73,7 @@ public interface TransformerSetup<P> {
    * @param parameters agent parameters that are passed from server
    * @return true if transformations of thus transformer are applicable for given parameters, false otherwise
    */
-  public fun isTransformerAvailable(parameters: P): Boolean = true
+  public fun isTransformerAvailable(parameters: Params): Boolean = true
 
   /**
    * Reports whether transformations of thus transformer are applicable for given parameters
@@ -80,7 +82,8 @@ public interface TransformerSetup<P> {
    * @param unavailableReasonConsumer pass a reason why you return false. Only last passed value is used
    * @return true if transformations of thus transformer are applicable for given parameters, false otherwise
    */
-  public fun isTransformerAvailable(parameters: P, unavailableReasonConsumer: (String) -> Unit): Boolean = isTransformerAvailable(parameters)
+  public fun isTransformerAvailable(parameters: Params, unavailableReasonConsumer: (String) -> Unit): Boolean =
+    isTransformerAvailable(parameters)
 
   /**
    * Runs transformation (returned from [getTransformations]) of this transformer.
@@ -91,7 +94,7 @@ public interface TransformerSetup<P> {
    */
   public fun runTransformations(
     instrumentation: Instrumentation,
-    parameters: P,
+    parameters: Params,
     canRetransform: Boolean = true,
   ) {
 
@@ -123,11 +126,15 @@ public interface TransformerSetup<P> {
     instrumentation.apply {
       addTransformer(transformer, canRetransform)
       retransformClasses(*transformations.keys.toTypedArray())
+
+      val pool = ClassPool().apply { appendClassPath(LoaderClassPath(loader)) }
+
+      redefineClasses(*transformations.map { ClassDefinition(it.key, it.value(pool[it.key.name])) }.toTypedArray())
     }
   }
 }
 
-public abstract class TransformerSetupBase<P> : TransformerSetup<P> {
+public abstract class TransformerSetupBase<Params> : TransformerSetup<Params> {
 
   override var transformationResultConsumer: (TransformationResult) -> Unit = {}
 }

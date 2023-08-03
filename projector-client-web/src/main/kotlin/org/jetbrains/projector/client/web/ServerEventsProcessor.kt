@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,25 +23,28 @@
  */
 package org.jetbrains.projector.client.web
 
-import kotlinx.browser.window
 import org.jetbrains.projector.client.common.RenderingQueue
 import org.jetbrains.projector.client.web.component.MarkdownPanelManager
 import org.jetbrains.projector.client.web.input.InputController
-import org.jetbrains.projector.client.web.misc.PingStatistics
+import org.jetbrains.projector.client.web.misc.*
 import org.jetbrains.projector.client.web.speculative.Typing
+import org.jetbrains.projector.client.web.state.ClientAction
+import org.jetbrains.projector.client.web.state.ClientStateMachine
 import org.jetbrains.projector.client.web.state.ProjectorUI
 import org.jetbrains.projector.client.web.window.OnScreenMessenger
-import org.jetbrains.projector.client.web.window.WindowDataEventsProcessor
 import org.jetbrains.projector.client.web.window.WebWindowManager
+import org.jetbrains.projector.client.web.window.WindowDataEventsProcessor
 import org.jetbrains.projector.common.misc.Do
 import org.jetbrains.projector.common.protocol.toClient.*
-import org.jetbrains.projector.util.logging.Logger
 
 class ServerEventsProcessor(
   private val windowManager: WebWindowManager,
   private val windowDataEventsProcessor: WindowDataEventsProcessor,
   private val renderingQueue: RenderingQueue,
+  private val stateMachine: ClientStateMachine,
 ) {
+
+  private val clipboardHandler = ClipboardHandler { stateMachine.fire(ClientAction.AddEvent(it)) }
 
   fun process(
     commands: ToClientMessageType, pingStatistics: PingStatistics, typing: Typing, markdownPanelManager: MarkdownPanelManager,
@@ -68,7 +71,7 @@ class ServerEventsProcessor(
           inputController.handleCaretInfoChange(command.data)
         }
 
-        is ServerClipboardEvent -> handleServerClipboardChange(command)
+        is ServerClipboardEvent -> clipboardHandler.copyText(command.stringContent)
 
         is ServerPingReplyEvent -> pingStatistics.onPingReply(command)
 
@@ -111,13 +114,4 @@ class ServerEventsProcessor(
     windowDataEventsProcessor.onResized()
   }
 
-  private fun handleServerClipboardChange(event: ServerClipboardEvent) {
-    window.navigator.clipboard.writeText(event.stringContent)
-      .catch { logger.error { "Error writing clipboard: $it" } }
-  }
-
-  companion object {
-
-    private val logger = Logger<ServerEventsProcessor>()
-  }
 }

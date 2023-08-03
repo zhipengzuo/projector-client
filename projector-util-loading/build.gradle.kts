@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +35,23 @@ kotlin {
 
 publishToSpace("java")
 
+val coroutinesVersion: String by project
+val kotestVersion: String by project
+val intellijPlatformVersion: String by project
+
 dependencies {
+  compileOnly(project(":projector-common"))
   api(project(":projector-util-logging"))
-  testImplementation(kotlin("test"))
+
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
+
+  compileOnly("com.jetbrains.intellij.platform:bootstrap:$intellijPlatformVersion")
+  compileOnly("com.jetbrains.intellij.platform:util-base:$intellijPlatformVersion")
+
+  testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
+  testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+}
+
+val test by tasks.getting(Test::class) {
+  jvmArgs("--add-opens=java.base/java.lang.reflect=ALL-UNNAMED")
 }

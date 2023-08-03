@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,6 +51,12 @@ enum class KeyModifier {
   ALT_KEY,
   META_KEY,
   REPEAT,
+}
+
+enum class ClientNotificationType {
+  INFORMATION,
+  WARNING,
+  ERROR,
 }
 
 @Serializable
@@ -225,4 +231,11 @@ data class ClientWindowsActivationEvent(
 @Serializable
 data class ClientWindowsDeactivationEvent(
   val windowIds: List<Int>,
+) : ClientEvent()
+
+@Serializable
+data class ClientNotificationEvent(
+  val title: String,
+  val message: String,
+  val notificationType: ClientNotificationType,
 ) : ClientEvent()

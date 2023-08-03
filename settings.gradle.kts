@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,8 +40,8 @@ pluginManagement {
     kotlin("js") version kotlinVersion apply false
     kotlin("jvm") version kotlinVersion apply false
     kotlin("plugin.serialization") version kotlinVersion apply false
-    id("ru.vyarus.mkdocs") version gradleMkdocsPluginVersion apply false
     id("org.paleozogt.symzip") version symZipVersion apply false
+    id("ru.vyarus.mkdocs") version gradleMkdocsPluginVersion apply false
   }
 }
 

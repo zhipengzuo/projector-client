@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,8 @@
  */
 import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompile
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
 
 plugins {
   kotlin("multiplatform") apply false
@@ -59,6 +61,10 @@ subprojects {
       jvmTarget = targetJvm
     }
   }
+}
+
+plugins.withType(NodeJsRootPlugin::class.java) {
+  the<NodeJsRootExtension>().nodeVersion = "16.14.2"
 }
 
 if (System.getenv("CHROME_BIN") == null) {

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,7 @@ publishToSpace("java")
 setupJacoco()
 
 val intellijPlatformVersion: String by project
+val kotestVersion: String by project
 val kotlinVersion: String by project
 
 dependencies {
@@ -43,5 +44,6 @@ dependencies {
 
   compileOnly("com.jetbrains.intellij.platform:core-impl:$intellijPlatformVersion")
 
-  testImplementation(kotlin("test", kotlinVersion))
+  testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
+  testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
 }

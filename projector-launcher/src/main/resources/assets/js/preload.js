@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+const {ipcRenderer, contextBridge} = require("electron");
+
+contextBridge.exposeInMainWorld("api", {
+  send: (channel, ...data) => {
+    const allowedChannels = [
+      "projector-connect",
+      "projector-dom-ready",
+      "toolboxinfo-ok",
+      "projector-set-url"
+    ];
+
+    if (allowedChannels.includes(channel)) {
+      ipcRenderer.send(channel, ...data);
+    }
+  },
+
+  receive: (channel, cb) => {
+    const allowedChannels = [
+      "projector-set-url",
+    ];
+    if (allowedChannels.includes(channel)) {
+      ipcRenderer.on(channel, (event, ...args) => cb(...args));
+    }
+  },
+});
+
 function domReady(fn) {
   if (document.readyState === "complete" || document.readyState === "interactive") {
     setTimeout(fn, 1);

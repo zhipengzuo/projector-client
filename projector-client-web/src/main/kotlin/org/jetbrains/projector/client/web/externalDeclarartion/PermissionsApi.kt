@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,33 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.jetbrains.projector.client.web.electron
+package org.jetbrains.projector.client.web.externalDeclarartion
 
-import kotlinx.browser.window
-import org.jetbrains.projector.client.web.externalDeclarartion.process
+import org.w3c.dom.Navigator
+import kotlin.js.Json
+import kotlin.js.Promise
 
-// adopted from https://github.com/cheton/is-electron
-internal fun isElectron(): Boolean {
-  // Renderer process
-  if (isDefined(window) && jsTypeOf(window.process) == "object" && window.process.type == "renderer") {
-    return true
-  }
+// todo: remove after https://youtrack.jetbrains.com/issue/KT-36037 is resolved
+external class Permissions {
 
-  // Main process
-  if (isDefined(process) && jsTypeOf(process.versions) == "object" && jsBoolean(process.versions.electron)) {
-    return true
-  }
-
-  // Detect the user agent when the `nodeIntegration` option is set to true
-  if (jsTypeOf(window.navigator) == "object" && jsTypeOf(window.navigator.userAgent) == "string" && window.navigator.userAgent.contains("Electron")) {
-    return true
-  }
-
-  return false
+  fun query(permissionDescriptor: Json): Promise<PermissionStatus>
 }
 
-@Suppress("NOTHING_TO_INLINE", "UNUSED_PARAMETER")
-private inline fun jsBoolean(expression: Any?): Boolean = js("Boolean(expression)") as Boolean
+external class PermissionStatus
 
-@Suppress("NOTHING_TO_INLINE")
-private inline fun isDefined(obj: Any?): Boolean = jsTypeOf(obj) != "undefined"
+val Navigator.permissions: Permissions get() = asDynamic().permissions as Permissions

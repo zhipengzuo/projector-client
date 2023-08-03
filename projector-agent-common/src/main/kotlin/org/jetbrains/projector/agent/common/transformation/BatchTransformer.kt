@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,20 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.jetbrains.projector.agent.ijInjector
+package org.jetbrains.projector.agent.common.transformation
 
-import org.jetbrains.projector.agent.common.transformation.TransformationResult
-import org.jetbrains.projector.agent.common.transformation.TransformerSetup
 import org.jetbrains.projector.util.logging.Logger
 import java.lang.instrument.Instrumentation
 
-internal class BatchTransformer(private val transformerSetups: List<TransformerSetup<IjInjector.AgentParameters>>) : TransformerSetup<IjInjector.AgentParameters> {
+/**
+ * Transformer setup that simplifies running transformations and logging results of transformers' batch
+ */
+public open class BatchTransformer<Params, Transformer: TransformerSetup<Params>>(protected val transformerSetups: List<Transformer>) : TransformerSetup<Params> {
 
-  private val results = mutableListOf<TransformationResult>()
+  protected val results: MutableList<TransformationResult> = mutableListOf()
 
-  private val logger: Logger = Logger<BatchTransformer>()
+  protected open val logger: Logger = Logger<BatchTransformer<Params, Transformer>>()
 
-  override var transformationResultConsumer = { transformationResult: TransformationResult ->
+  final override var transformationResultConsumer: (TransformationResult) -> Unit = { transformationResult: TransformationResult ->
     results += transformationResult
   }
 
@@ -44,11 +45,14 @@ internal class BatchTransformer(private val transformerSetups: List<TransformerS
 
   override fun runTransformations(
     instrumentation: Instrumentation,
-    parameters: IjInjector.AgentParameters,
+    parameters: Params,
     canRetransform: Boolean,
   ) {
     transformerSetups.forEach { it.runTransformations(instrumentation, parameters, canRetransform) }
+    logResults("")
+  }
 
+  protected fun logResults(typeSuffix: String) {
     // resultKind -> transformer name -> message for each class
     val map = mutableMapOf<String, MutableMap<String, MutableSet<String>>>()
     results.forEach { result ->
@@ -65,7 +69,7 @@ internal class BatchTransformer(private val transformerSetups: List<TransformerS
     }
 
     map.entries.forEach { (key, value) ->
-      val message = "$key: ${value.entries.joinToString(prefix = "[", postfix = "]") { (subKey, subValue) -> "$subKey: ${subValue.joinToString(separator = "; ", prefix = "(", postfix = ")") { it }}" }}"
+      val message = "$key $typeSuffix: ${value.entries.joinToString(prefix = "[", postfix = "]") { (subKey, subValue) -> "$subKey: ${subValue.joinToString(separator = "; ", prefix = "(", postfix = ")") { it }}" }}"
       when (key) {
         TransformationResult.Error::class.java.simpleName -> logger.error { message }
         else -> logger.debug { message }

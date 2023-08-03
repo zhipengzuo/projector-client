@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,3 +47,9 @@ fun Boolean.toDisplayType(): String = when (this) {
   true -> "block"
   false -> "none"
 }
+
+@Suppress("NOTHING_TO_INLINE", "UNUSED_PARAMETER")
+inline fun jsBoolean(expression: Any?): Boolean = js("Boolean(expression)") as Boolean
+
+@Suppress("NOTHING_TO_INLINE")
+inline fun isDefined(obj: Any?): Boolean = jsTypeOf(obj) != "undefined"

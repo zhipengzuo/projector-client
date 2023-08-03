@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -49,15 +49,15 @@ function connect() {
     return;
   }
 
-  const {ipcRenderer} = require('electron')
-  ipcRenderer.send("projector-connect", url);
+  const {api} = window;
+  api.send("projector-connect", url);
 
   cacheNewUrlValue(url);
 }
 
 //$( document ).ready(function() {
-const {ipcRenderer} = require('electron')
-ipcRenderer.on('projector-set-url', (event, arg) => {
+const {api} = window;
+api.receive('projector-set-url', (event, arg) => {
   console.log("New URL: " + arg);
   document.getElementById("url-text-field").value = arg
 })

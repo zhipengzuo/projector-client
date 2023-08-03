@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,10 +34,12 @@ kotlin {
   explicitApi()
 }
 
+val coroutinesVersion: String by project
 val javassistVersion: String by project
 val intellijPlatformVersion: String by project
 val intellijMarkdownPluginVersion: String by project
 val intellijJcefVersion: String by project
+val kotestVersion: String by project
 
 dependencies {
   implementation(project(":projector-agent-common"))
@@ -45,6 +47,7 @@ dependencies {
   implementation(project(":projector-util-loading"))
   implementation(project(":projector-util-logging"))
   implementation("org.javassist:javassist:$javassistVersion")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
 
   compileOnly("com.jetbrains.intellij.platform:ide-impl:$intellijPlatformVersion")
   compileOnly("com.jetbrains.intellij.platform:util-ui:$intellijPlatformVersion")
@@ -52,7 +55,8 @@ dependencies {
   compileOnly("com.jetbrains.intellij.markdown:markdown:$intellijMarkdownPluginVersion")
   compileOnly("org.jetbrains.intellij.deps.jcef:jcef:$intellijJcefVersion")
 
-  testImplementation(kotlin("test"))
+  testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
+  testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
 }
 
 val agentClass = "org.jetbrains.projector.agent.ijInjector.IjInjectorAgent"
@@ -65,6 +69,8 @@ tasks.withType<Jar> {
       "Agent-Class" to agentClass
     )
   }
+
+  duplicatesStrategy = DuplicatesStrategy.WARN
 
   exclude("META-INF/versions/9/module-info.class")
 

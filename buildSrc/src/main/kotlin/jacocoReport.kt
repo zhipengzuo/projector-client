@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,6 +51,10 @@ private fun JacocoReport.setup(project: Project, isKotlinMpModule: Boolean) {
   }
 
   val moduleName = project.name.split("-").joinToString("") { it.capitalize() }
+
+  // fix jacoco error "Can't add different class with same name" due to
+  // projector-server-core/build/resources/main/projector-agent/projector-agent-ij-injector.jar
+  classDirectories.setFrom(classDirectories.files.filter { !it.endsWith("projector-server-core/build/resources/main") })
 
   reports {
     xml.required.set(true)

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,9 +36,11 @@ kotlin {
 publishToSpace("java")
 
 val javassistVersion: String by project
+val kotestVersion: String by project
 
 dependencies {
   implementation(project(":projector-util-loading"))
   implementation("org.javassist:javassist:$javassistVersion")
-  testImplementation(kotlin("test"))
+  testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
+  testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
 }

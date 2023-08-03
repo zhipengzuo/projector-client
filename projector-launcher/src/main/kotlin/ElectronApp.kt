@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,19 +24,20 @@
 @file:Suppress("JSCODE_ARGUMENT_SHOULD_BE_CONSTANT")
 
 import Electron.*
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.await
 import kotlinx.coroutines.launch
 import org.w3c.dom.url.URL
 
-external fun encodeURI(data: String): String
-
+@OptIn(DelicateCoroutinesApi::class)
 class ElectronApp(val url: String) {
   var that = this
   var configData = js("{}")
+  var toolboxInfoWasActivated: Boolean = false
 
   var path = require("path")
-  var node_url = require("url")
+  //var node_url = require("url") //uncomment to enable "url" module
   var node_fs = require("fs")
 
   var app: App = Electron.app
@@ -55,7 +56,30 @@ class ElectronApp(val url: String) {
         that.mainWindowUrl = url
       }
       catch (e: dynamic) {
+        Logger.debug(e)
+      }
+    })
+  }
 
+  fun navigateMainWindowFromFile(url: String, saveToHistory: Boolean) {
+    GlobalScope.launch(block = {
+      if (saveToHistory) {
+        that.mainWindowNextUrl = url
+        try {
+          that.mainWindow.loadFile(url).await()
+          that.mainWindowPrevUrl = that.mainWindowUrl
+          that.mainWindowUrl = url
+        }
+        catch (e: dynamic) {
+          Logger.debug(e)
+        }
+      } else {
+        try {
+          that.mainWindow.loadFile(url).await()
+        }
+        catch (e: dynamic) {
+          Logger.debug(e)
+        }
       }
     })
   }
@@ -69,8 +93,8 @@ class ElectronApp(val url: String) {
                     width: width,
                     height: height,
                     webPreferences: {
-                        nodeIntegration: true,
-                        contextIsolation: false,
+                        nodeIntegration: false,
+                        contextIsolation: true,
                         enableRemoteModule: true,
                         webSecurity: false,
                         worldSafeExecuteJavaScript: true,
@@ -109,13 +133,20 @@ class ElectronApp(val url: String) {
                                    didFailLoadListener = { _: Event, errorCode: Number, errorDescription: String, validatedURL: String, _: Boolean, _: Number, _: Number ->
                                      GlobalScope.launch(block = {
                                        if (!that.initialized) {
-                                         if (!validatedURL.isNullOrBlank()) {
+                                         if (validatedURL.isNotBlank()) {
                                            messageInvalidURL(validatedURL)
                                          }
 
                                          console.log("Can't load the URL: $validatedURL")
                                          console.log("errorDescription: $errorDescription, errorCode: $errorCode")
-                                         that.mainWindow.loadFile("openurl.html").await()
+
+                                         val dontShowToolboxInfo = (that.configData.dontShowToolboxInfo ?: false) as Boolean
+                                         if (!that.toolboxInfoWasActivated && !dontShowToolboxInfo) {
+                                           that.toolboxInfoWasActivated = true
+                                           that.mainWindow.loadFile("toolboxinfo.html").await()
+                                         } else {
+                                           that.mainWindow.loadFile("openurl.html").await()
+                                         }
                                        }
                                        else {
                                          Logger.direct(
@@ -149,16 +180,8 @@ class ElectronApp(val url: String) {
     })
   }
 
-  fun loadMessage(message: String) {
-    GlobalScope.launch(block = {
-      that.mainWindow.loadURL("about:blank").await()
-      var html = "<body><h1>Invalid URL</h1><p>$message</p></body>"
-      that.mainWindow.loadURL("data:text/html;charset=utf-8," + encodeURI(html)).await()
-    })
-  }
-
   fun testUrl(url: String): Boolean {
-    var result: Boolean = true
+    var result = true
     try {
       URL(url)
     }
@@ -182,10 +205,14 @@ class ElectronApp(val url: String) {
       this.connect(arg)
     }
 
+    ipcMain.on("toolboxinfo-ok") { _, arg: dynamic ->
+      this.toolboxInfoOK((arg ?: false) as Boolean)
+    }
+
     ipcMain.on("projector-dom-ready") { event, _ ->
       ElectronUtil.disableAllStandardShortcuts()
 
-      var defaultUrl = this.configData.defaultUrl
+      val defaultUrl = this.configData.defaultUrl
       if (null != defaultUrl) {
         event.sender.send("projector-set-url", defaultUrl)
       }
@@ -244,9 +271,17 @@ class ElectronApp(val url: String) {
     }
   }
 
+  fun toolboxInfoOK(dontShowAgain: Boolean) {
+    that.configData.dontShowToolboxInfo = dontShowAgain
+    savedb()
+    Logger.debug("Will navigate to the default page")
+    this.navigateMainWindowFromFile("openurl.html", false)
+  }
+
   fun connect(newUrl: String, password: String? = null) {
     if (!this.testUrl(newUrl)) {
       messageInvalidURL(newUrl)
+      return
     }
     val urlToAddOptions = URL(newUrl)
     urlToAddOptions.searchParams.append("blockClosing", "false")
@@ -269,7 +304,7 @@ class ElectronApp(val url: String) {
   }
 
   fun savedb() {
-    var data = JSON.stringify(this.configData)
+    val data = JSON.stringify(this.configData)
 
     if (!node_fs.existsSync(GlobalSettings.USER_CONFIG_DIR)) {
       node_fs.mkdirSync(GlobalSettings.USER_CONFIG_DIR)
@@ -279,7 +314,7 @@ class ElectronApp(val url: String) {
 
   fun loaddb() {
     if (node_fs.existsSync(GlobalSettings.USER_CONFIG_FILE)) {
-      var buffer = node_fs.readFileSync(GlobalSettings.USER_CONFIG_FILE)
+      val buffer = node_fs.readFileSync(GlobalSettings.USER_CONFIG_FILE)
       this.configData = JSON.parse(buffer.toString())
     }
   }

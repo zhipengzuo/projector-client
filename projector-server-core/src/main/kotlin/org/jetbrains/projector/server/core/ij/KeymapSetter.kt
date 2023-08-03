@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,8 @@ import com.intellij.openapi.keymap.KeymapManager
 import com.intellij.openapi.keymap.ex.KeymapManagerEx
 import org.jetbrains.projector.common.protocol.data.UserKeymap
 import org.jetbrains.projector.util.loading.UseProjectorLoader
+import org.jetbrains.projector.util.loading.state.IdeState
+import org.jetbrains.projector.util.loading.state.whenOccurred
 import org.jetbrains.projector.util.logging.Logger
 import javax.swing.SwingUtilities
 
@@ -42,7 +44,7 @@ public object KeymapSetter {
   }
 
   public fun setKeymap(keymap: UserKeymap) {
-    invokeWhenIdeaIsInitialized("set keymap to match user's OS ($keymap)") {
+    IdeState.CONFIGURATION_STORE_INITIALIZED.whenOccurred("set keymap to match user's OS ($keymap)") {
       SwingUtilities.invokeLater {
         // it should be done on EDT
         val keymapManagerExInstance = KeymapManagerEx.getInstanceEx()

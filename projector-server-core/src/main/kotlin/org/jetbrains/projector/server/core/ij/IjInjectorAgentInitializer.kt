@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,19 +34,16 @@ public object IjInjectorAgentInitializer {
   internal const val MD_PANEL_CLASS_NAME = "org.jetbrains.projector.server.core.ij.md.ProjectorMarkdownPanel"
 
   @Suppress("unused") // Called from projector-server, don't trigger linter that doesn't know it
-  @OptIn(ExperimentalStdlibApi::class)
-  public fun init(isAgent: Boolean) {
-    invokeWhenIdeaIsInitialized("attach IJ injector agent") {
+  public fun init(isAgent: Boolean, isIdeAttached: Boolean) {
+    val args = mapOf(
+      IjArgs.IS_AGENT to isAgent,
+      IjArgs.MD_PANEL_CLASS to MD_PANEL_CLASS_NAME,
+      IjArgs.IS_IDE_ATTACHED to isIdeAttached,
+    ).toIjArgs()
 
-      val args = mapOf(
-        IjArgs.IS_AGENT to isAgent,
-        IjArgs.MD_PANEL_CLASS to MD_PANEL_CLASS_NAME,
-      ).toIjArgs()
-
-      copyAgentToTempJarAndAttach(
-        agentJar = this::class.java.getResourceAsStream("/projector-agent/projector-agent-ij-injector.jar")!!,
-        args = args,
-      )
-    }
+    copyAgentToTempJarAndAttach(
+      agentJar = this::class.java.getResourceAsStream("/projector-agent/projector-agent-ij-injector.jar")!!,
+      args = args,
+    )
   }
 }

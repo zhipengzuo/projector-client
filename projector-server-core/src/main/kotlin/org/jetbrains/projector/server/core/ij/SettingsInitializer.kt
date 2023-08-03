@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2019-2022 JetBrains s.r.o.
+ * Copyright (c) 2019-2023 JetBrains s.r.o.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,8 @@ import com.intellij.ide.ui.AntialiasingType
 import com.intellij.ide.ui.UISettings
 import com.intellij.util.ui.AATextInfo
 import org.jetbrains.projector.util.loading.UseProjectorLoader
+import org.jetbrains.projector.util.loading.state.IdeState
+import org.jetbrains.projector.util.loading.state.whenOccurred
 import org.jetbrains.projector.util.logging.Logger
 import java.awt.RenderingHints
 import javax.swing.UIManager
@@ -68,7 +70,7 @@ public object SettingsInitializer {
   }
 
   public fun addTaskToInitializeIdea(defaultAa: Any?) {
-    invokeWhenIdeaIsInitialized("initialize IDEA: fix AA and disable smooth scrolling (at start)") {
+    IdeState.CONFIGURATION_STORE_INITIALIZED.whenOccurred("initialize IDEA: fix AA and disable smooth scrolling (at start)") {
       onIdeaInitialization(defaultAa)
     }
   }
