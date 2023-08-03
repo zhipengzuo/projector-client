@@ -35,6 +35,8 @@ import org.jetbrains.projector.server.core.util.SizeAware
 import org.jetbrains.projector.util.logging.Logger
 import java.util.concurrent.ConcurrentLinkedQueue
 
+public const val CLIENT_SETTING: String = "CLIENT_SETTING"
+
 public sealed class ClientSettings {
 
   public abstract val connectionMillis: Long

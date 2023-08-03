@@ -34,8 +34,20 @@
   <link href="manifest.webmanifest" rel="manifest">
   <link href="apple-touch-icon.png" rel="apple-touch-icon" sizes="192x192" >
 
-  <script src="https://cdn.jsdelivr.net/pako/1.0.3/pako.min.js"></script>
+  <script src="https://cdn.bootcss.com/pako/2.0.4/pako.min.js"></script>
   <script>
+    async function loadBrotli() {
+      let brotli = await import("https://unpkg.com/brotli-wasm@2.0.0/index.web.js?module").then(m => m.default);
+      window.brotli = (data) => {
+        const decompressedData = brotli.decompress(new Uint8Array(data.buffer));
+        return new Int8Array(decompressedData.buffer)
+      }
+    }
+
+    window.depress=(data)=> {
+      const decompressedData = pako.inflate(new Uint8Array(data.buffer))
+      return new Int8Array(decompressedData.buffer)
+    }
     // Disable caching for some scripts (described here: https://stackoverflow.com/questions/118884/how-to-force-the-browser-to-reload-cached-css-js-files):
     const timestamp = Math.floor(Date.now());
     const notCachableScripts = [
@@ -50,7 +62,8 @@
         '" type="text/javascript"><\/script>'
     ));
 
-    function onLoad() {
+    async function onLoad() {
+      await loadBrotli();
       if (window['projector-client-web']) {
         window['projector-client-web'].org.jetbrains.projector.client.web.onLoad();
       }

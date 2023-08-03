@@ -125,5 +125,9 @@ object Extensions {
 
     return "rgba($r,$g,$b,$a)"
   }
+  val serverFontNameCache = IntRange(0,255).map { "serverFont$it" }.toTypedArray()
+  val fontSizeStrCache = IntRange(0,255).map { "${it}px " }.toTypedArray()
+  val fontSizeScalingFactorCache = HashMap<Int,Double>()
 }
 
+expect fun <T> Any?.asUnsafe(): T

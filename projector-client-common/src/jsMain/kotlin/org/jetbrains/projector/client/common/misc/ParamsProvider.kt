@@ -105,6 +105,7 @@ actual object ParamsProvider {
   val SPECULATIVE_TYPING_LATENCY: Int
   val SCALING_RATIO: Double
     get() = SYSTEM_SCALING_RATIO * USER_SCALING_RATIO
+  val COMPRESSION_TYPE: CompressionType
 
   init {
     with(URL(window.location.href)) {
@@ -164,8 +165,18 @@ actual object ParamsProvider {
         "frAzerty" -> LayoutType.FR_AZERTY
         else -> LayoutType.JS_DEFAULT
       }
+      COMPRESSION_TYPE = when (searchParams.get("compressionType")) {
+        "gzip" -> CompressionType.GZIP
+        "br" -> CompressionType.BR
+        else -> CompressionType.GZIP
+      }
       SPECULATIVE_TYPING_LATENCY = searchParams.get("speculativeTypingLatency")?.toIntOrNull() ?: DEFAULT_SPECULATIVE_TYPING_LATENCY
     }
+  }
+
+  enum class CompressionType {
+    GZIP,
+    BR
   }
 
   enum class ToClientFormat {

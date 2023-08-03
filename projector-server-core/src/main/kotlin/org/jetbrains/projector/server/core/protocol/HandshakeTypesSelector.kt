@@ -23,6 +23,7 @@
  */
 package org.jetbrains.projector.server.core.protocol
 
+import com.nixxcode.jvmbrotli.common.BrotliLoader
 import org.jetbrains.projector.common.protocol.compress.MessageCompressor
 import org.jetbrains.projector.common.protocol.compress.MessageDecompressor
 import org.jetbrains.projector.common.protocol.compress.NotCompressor
@@ -38,6 +39,7 @@ public object HandshakeTypesSelector {
 
   public fun selectToClientCompressor(supportedToClientCompressions: List<CompressionType>): MessageCompressor<ToClientTransferableType>? {
     fun CompressionType.toToClientCompressor(): MessageCompressor<ToClientTransferableType>? = when (this) {
+      CompressionType.BR -> if (BrotliLoader.isBrotliAvailable()) BrotliMessageCompressor else GZipMessageCompressor
       CompressionType.GZIP -> GZipMessageCompressor
       CompressionType.NONE -> NotCompressor()
     }

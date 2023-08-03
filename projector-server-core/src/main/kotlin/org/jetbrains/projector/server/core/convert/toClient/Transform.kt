@@ -25,6 +25,7 @@ package org.jetbrains.projector.server.core.convert.toClient
 
 import org.jetbrains.projector.common.misc.Do
 import org.jetbrains.projector.common.protocol.data.CommonRectangle
+import org.jetbrains.projector.common.protocol.data.PathSegment
 import org.jetbrains.projector.common.protocol.toClient.*
 import org.jetbrains.projector.util.logging.Logger
 import java.awt.geom.AffineTransform
@@ -173,7 +174,120 @@ public fun Iterable<Pair<ServerDrawCommandsEvent.Target, List<ServerWindowEvent>
 
   lastTarget?.let { flush(it) }
 
+  mergeDrawEvents(shrunk)
+
   return shrunk
+}
+
+private fun mergeDrawEvents(events: MutableList<ServerDrawCommandsEvent>) {
+  if (events.isEmpty()) {
+    return
+  }
+  var preDrawStringEvent: ServerDrawStringEvent? = null
+  var preSetClipEvent: ServerSetClipEvent? = null
+  var prePaintRectEvent: ServerPaintRectEvent? = null
+  var prePaintPathEvent: ServerPaintPathEvent? = null
+  var strFontSize = 0
+
+  events.forEach { serverDrawEvent ->
+    if (serverDrawEvent.drawEvents !is ArrayList) {
+      return
+    }
+    val arrayList = serverDrawEvent.drawEvents as ArrayList<ServerWindowEvent>
+    val iterator = arrayList.iterator()
+
+    while (iterator.hasNext()) {
+      val curWindowEvent = iterator.next()
+      // merge ServerSetClipEvent
+      if (curWindowEvent is ServerSetClipEvent && curWindowEvent.shape is CommonRectangle) {
+        if (preSetClipEvent == null) {
+          preSetClipEvent = curWindowEvent
+        }
+        else {
+          val preSetClipShape = preSetClipEvent!!.shape as CommonRectangle
+          val curSetClipShape = curWindowEvent.shape as CommonRectangle
+          // can merge
+          if (preSetClipShape.x < curSetClipShape.x && preSetClipShape.y == curSetClipShape.y
+              && preSetClipShape.width > curSetClipShape.width && preSetClipShape.height == curSetClipShape.height) {
+            iterator.remove()
+          }
+        }
+        continue
+      }
+      // merge ServerDrawStringEvent
+      if (curWindowEvent is ServerDrawStringEvent) {
+        if (preDrawStringEvent == null) {
+          preDrawStringEvent = curWindowEvent
+          strFontSize = curWindowEvent.desiredWidth.toInt() / curWindowEvent.str.length
+          continue
+        }
+        // can merge
+        if (preDrawStringEvent!!.y == curWindowEvent.y && (curWindowEvent.x - preDrawStringEvent!!.x - preDrawStringEvent!!.desiredWidth) % strFontSize == 0.0) {
+          val blankCount = (curWindowEvent.x - preDrawStringEvent!!.x - preDrawStringEvent!!.desiredWidth).toInt() / strFontSize
+          preDrawStringEvent!!.str += " ".repeat(blankCount) + curWindowEvent.str
+          preDrawStringEvent!!.desiredWidth += curWindowEvent.desiredWidth + blankCount * strFontSize
+          iterator.remove()
+          continue
+        }
+      }
+      // merge ServerPaintRectEvent: 画矩形
+      // 注释 by 王文斌: ServerPaintRectEvent 合并后, 会导致 terminal 在 Tab 选择命令时, 无法展示被 Tab 选中的命令
+      if (false && curWindowEvent is ServerPaintRectEvent) {
+        if (prePaintRectEvent == null) {
+          prePaintRectEvent = curWindowEvent
+          continue
+        }
+        // can merge
+        if (prePaintRectEvent!!.y == curWindowEvent.y && prePaintRectEvent!!.height == curWindowEvent.height
+            && prePaintRectEvent!!.paintType === curWindowEvent.paintType
+            && prePaintRectEvent!!.x + prePaintRectEvent!!.width == curWindowEvent.x) {
+          prePaintRectEvent!!.width = prePaintRectEvent!!.width + curWindowEvent.width
+          iterator.remove()
+          continue
+        }
+      }
+      // merge ServerPaintPathEvent 事件:画线
+      if (curWindowEvent is ServerPaintPathEvent) {
+        if (prePaintPathEvent == null) {
+          prePaintPathEvent = curWindowEvent
+          continue
+        }
+        // can merge
+        if (prePaintPathEvent!!.paintType == curWindowEvent.paintType
+            && prePaintPathEvent!!.path.winding == curWindowEvent.path.winding) {
+          val segments = mutableListOf<PathSegment>()
+          segments.addAll(prePaintPathEvent!!.path.segments)
+          segments.addAll(curWindowEvent.path.segments)
+          prePaintPathEvent!!.path.segments = segments
+          iterator.remove()
+          continue
+        }
+      }
+      // 重置, 下一次还有合并机会
+      if (curWindowEvent is ServerDrawStringEvent) {
+        preDrawStringEvent = curWindowEvent
+        strFontSize = curWindowEvent.desiredWidth.toInt() / curWindowEvent.str.length
+      } else {
+        preDrawStringEvent = null
+        strFontSize = 0
+      }
+      prePaintPathEvent = if (curWindowEvent is ServerPaintPathEvent) {
+        curWindowEvent
+      } else {
+        null
+      }
+      preSetClipEvent = if (curWindowEvent is ServerSetClipEvent) {
+        curWindowEvent
+      } else {
+        null
+      }
+      prePaintRectEvent = if (curWindowEvent is ServerPaintRectEvent) {
+        curWindowEvent
+      } else {
+        null
+      }
+    }
+  }
 }
 
 private val logger = Logger("TransformKt")

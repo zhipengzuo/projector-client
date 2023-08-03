@@ -83,7 +83,7 @@ class SingleRenderingSurfaceProcessor(private val renderingSurface: RenderingSur
 
           is ServerSetClipEvent -> renderer.setClip(it.shape)
 
-          is ServerSetFontEvent -> renderer.setFont(it.fontId, it.fontSize, it.ligaturesOn)
+          is ServerSetFontEvent -> renderer.setFont(it.fontId?.toInt(), it.fontSize, it.ligaturesOn)
 
           is ServerSetStrokeEvent -> renderer.setStroke(it.strokeData)
 

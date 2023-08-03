@@ -51,7 +51,7 @@ data class CommonRectangle(
 @SerialName("b")
 data class CommonPath(
   @SerialName("a")
-  val segments: List<PathSegment> = emptyList(),  // todo: remove default after https://github.com/Kotlin/kotlinx.serialization/issues/806
+  var segments: List<PathSegment> = emptyList(),  // todo: remove default after https://github.com/Kotlin/kotlinx.serialization/issues/806
   @SerialName("b")
   val winding: WindingType,
 ) : CommonShape() {

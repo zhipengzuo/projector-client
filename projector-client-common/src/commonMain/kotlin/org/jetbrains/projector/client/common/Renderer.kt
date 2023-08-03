@@ -28,6 +28,7 @@ import org.jetbrains.projector.client.common.canvas.Context2d
 import org.jetbrains.projector.client.common.canvas.Context2d.FillRule
 import org.jetbrains.projector.client.common.canvas.Context2d.Matrix
 import org.jetbrains.projector.client.common.canvas.Context2d.Matrix.Companion.IDENTITY_LIST
+import org.jetbrains.projector.client.common.canvas.Extensions
 import org.jetbrains.projector.client.common.canvas.Extensions.applyStrokeData
 import org.jetbrains.projector.client.common.canvas.Extensions.toContext2dRule
 import org.jetbrains.projector.client.common.canvas.Extensions.toFillRule
@@ -428,17 +429,10 @@ class Renderer(private val renderingSurface: RenderingSurface) {
     requestedState.transform = tx
   }
 
-  fun setFont(fontId: Short?, fontSize: Int, ligaturesOn: Boolean) {
-    val font = if (fontId == null) {
-      logger.debug { "null is used as a font ID. Using Arial..." }
-
-      "${fontSize}px Arial"
-    }
-    else {
-      "${fontSize}px ${fontId.toFontFaceName()}"
-    }
-
-    requestedState.font = font
+  fun setFont(fontId: Int?, fontSize: Int, ligaturesOn: Boolean) {
+    requestedState.fontSize = fontSize
+    requestedState.fontName = fontId?.let { Extensions.serverFontNameCache[fontId] } ?: "Arial"
+    requestedState.font=Extensions.fontSizeStrCache[fontSize] + requestedState.fontName
     renderingSurface.canvas.fontVariantLigatures = ligaturesOn.toLigatureVariant()
     renderingSurface.canvas
   }
@@ -585,6 +579,8 @@ class Renderer(private val renderingSurface: RenderingSurface) {
       var identitySpaceClip: CommonShape? = DEFAULT_IDENTITY_SPACE_CLIP,
       var transform: List<Double> = DEFAULT_TRANSFORM,
       var strokeData: StrokeData = DEFAULT_STROKE_DATA,
+      var fontSize: Int = Defaults.FONT_SIZE,
+      var fontName: String = Defaults.FONT_NAME,
       var font: String = DEFAULT_FONT,
       var rule: AlphaCompositeRule = DEFAULT_RULE,
       var alpha: Double = DEFAULT_ALPHA,
@@ -596,6 +592,8 @@ class Renderer(private val renderingSurface: RenderingSurface) {
         identitySpaceClip = DEFAULT_IDENTITY_SPACE_CLIP
         transform = DEFAULT_TRANSFORM
         strokeData = DEFAULT_STROKE_DATA
+        fontSize = Defaults.FONT_SIZE
+        fontName = Defaults.FONT_NAME
         font = DEFAULT_FONT
         rule = DEFAULT_RULE
         alpha = DEFAULT_ALPHA
@@ -624,6 +622,8 @@ class Renderer(private val renderingSurface: RenderingSurface) {
       var rule: AlphaCompositeRule = AlphaCompositeRule.SRC_OVER,
       var alpha: Double = 1.0,
       var paint: PaintColor? = SolidColor(Defaults.FOREGROUND_COLOR_ARGB),
+      var fontSize: Int = Defaults.FONT_SIZE,
+      var fontName: String = "Arial",
     ) {
 
       fun setTo(other: RequestedRenderingState) {

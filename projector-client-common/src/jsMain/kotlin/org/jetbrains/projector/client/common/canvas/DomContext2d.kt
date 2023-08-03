@@ -25,7 +25,7 @@ package org.jetbrains.projector.client.common.canvas
 
 import org.jetbrains.projector.client.common.canvas.Canvas.ImageSource
 import org.jetbrains.projector.client.common.canvas.Context2d.*
-import org.jetbrains.projector.client.common.canvas.Extensions.argbIntToRgbaString
+import org.jetbrains.projector.client.common.canvas.JsExtensions.argbIntToRgbaString
 import org.jetbrains.projector.client.common.canvas.PaintColor.Gradient
 import org.jetbrains.projector.client.common.canvas.PaintColor.SolidColor
 import org.jetbrains.projector.common.misc.Do

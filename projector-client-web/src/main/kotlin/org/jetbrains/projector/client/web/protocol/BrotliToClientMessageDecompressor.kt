@@ -21,23 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.jetbrains.projector.common.misc
+package org.jetbrains.projector.client.web.protocol
 
-import org.jetbrains.projector.common.protocol.data.StrokeData
+import org.jetbrains.projector.common.protocol.compress.MessageDecompressor
+import org.jetbrains.projector.common.protocol.handshake.CompressionType
 
-object Defaults {
+object BrotliToClientMessageDecompressor : MessageDecompressor<ByteArray> {
 
-  const val FONT_SIZE = 12
-  const val FONT_NAME = "Arial"
-  const val FOREGROUND_COLOR_ARGB = 0xFF_00_00_00.toInt()
-  const val BACKGROUND_COLOR_ARGB = 0xFF_FF_FF_FF.toInt()
+  override fun decompress(data: ByteArray): ByteArray {
+    return brotli(data)
+  }
 
-  val STROKE = StrokeData.Basic(  // from Graphics2D "Default Rendering Attributes" java doc
-    lineWidth = 1.0f,
-    endCap = StrokeData.Basic.CapType.SQUARE,
-    lineJoin = StrokeData.Basic.JoinType.MITER,
-    miterLimit = 10.0f,
-    dashArray = null,
-    dashPhase = 0.0f
-  )
+  override val compressionType = CompressionType.BR
+
+  private val brotli: dynamic = js("window.brotli")
 }
